@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"time"
 )
 
 const NETWORK_NAME = "unix"
@@ -30,16 +31,26 @@ func main() {
 
 	scanner := bufio.NewScanner(conn)
 
+	lastActiveClass := ""
+	intervalStart := time.Now()
+
 	for scanner.Scan() {
 		line := scanner.Text()
-
+		now := time.Now()
 		_, after, found := strings.Cut(line, "activewindow>>")
 		if !found {
 			continue
 		}
-		before, _, _ := strings.Cut(after, ",")
+		currAppClass, _, _ := strings.Cut(after, ",")
 
-		fmt.Printf("%s", "active window: "+before+"\n")
+		if lastActiveClass == currAppClass {
+			continue
+		}
+
+		duration := now.Sub(intervalStart)
+		fmt.Printf("%s %v\n", "active window: "+lastActiveClass+": ", duration)
+		lastActiveClass = currAppClass
+		intervalStart = now
 	}
 
 	if err := scanner.Err(); err != nil {
