@@ -3,18 +3,23 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"log"
 	"net"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 )
 
 const NETWORK_NAME = "unix"
 
 func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
 	xdgRuntimeDir := os.Getenv("XDG_RUNTIME_DIR")
 	instanceSig := os.Getenv("HYPRLAND_INSTANCE_SIGNATURE")
@@ -31,14 +36,18 @@ func main() {
 	}
 	defer conn.Close()
 
+	go func(ctx context.Context, conn net.Conn) {
+		<-ctx.Done()
+		conn.Close()
+	}(ctx, conn)
 	scanner := bufio.NewScanner(conn)
 
 	lastActiveClass, err := getActiveClass()
 	if err != nil {
 		log.Fatalf("%s %v", "Error with getting active class: ", err)
 	}
-	intervalStart := time.Now()
 
+	intervalStart := time.Now()
 	for scanner.Scan() {
 		line := scanner.Text()
 		now := time.Now()
@@ -58,9 +67,14 @@ func main() {
 		intervalStart = now
 	}
 
-	if err := scanner.Err(); err != nil {
+	if err := scanner.Err(); err != nil && ctx.Err() == nil {
 		log.Fatalf("%v", err)
 	}
+
+	if ctx.Err() != nil {
+		fmt.Printf("%s %v\n", "active window: "+lastActiveClass+": ", time.Since(intervalStart))
+	}
+
 }
 
 func getActiveClass() (string, error) {
