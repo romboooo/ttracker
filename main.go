@@ -78,7 +78,9 @@ func getActiveClass() (string, error) {
 		return "", fmt.Errorf("%s %v\n", "Connection error: ", err)
 	}
 	defer conn.Close()
-
+	if err := conn.SetDeadline(time.Now().Add(timeout)); err != nil {
+		return "", fmt.Errorf("%s %v\n", "Connection error: ", err)
+	}
 	command := "/activewindow"
 
 	_, err = conn.Write([]byte(command))
