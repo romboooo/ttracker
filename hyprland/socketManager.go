@@ -72,3 +72,17 @@ func GetActiveClass() (string, error) {
 
 	return "", fmt.Errorf("property 'class' not found in hyprland response")
 }
+
+func ParseActiveWindow(line string) (string, bool) {
+	data, found := strings.CutPrefix(line, "activewindow>>")
+	if !found {
+		return "", false
+	}
+
+	class, _, found := strings.Cut(data, ",")
+	if !found {
+		return "", false
+	}
+
+	return class, true
+}

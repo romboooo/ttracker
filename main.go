@@ -14,6 +14,20 @@ import (
 
 	"github.com/romboooo/ttracker/hyprland"
 )
+package main
+
+import (
+	"bufio"
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/romboooo/ttracker/hyprland"
+)
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -26,10 +40,11 @@ func main() {
 	}
 	defer conn.Close()
 
-	go func(ctx context.Context, conn net.Conn) {
+	go func() {
 		<-ctx.Done()
 		conn.Close()
-	}(ctx, conn)
+	}()
+
 	scanner := bufio.NewScanner(conn)
 
 	lastActiveClass, err := hyprland.GetActiveClass()
@@ -39,14 +54,12 @@ func main() {
 
 	intervalStart := time.Now()
 	for scanner.Scan() {
-		line := scanner.Text()
-		now := time.Now()
-		_, after, found := strings.Cut(line, "activewindow>>")
-		if !found {
+		currAppClass, ok := hyprland.ParseActiveWindow(scanner.Text())
+		if !ok {
 			continue
 		}
-		currAppClass, _, _ := strings.Cut(after, ",")
 
+		now := time.Now()
 		if lastActiveClass == currAppClass {
 			continue
 		}
@@ -64,5 +77,4 @@ func main() {
 	if ctx.Err() != nil {
 		fmt.Printf("%s %v\n", "active window: "+lastActiveClass+": ", time.Since(intervalStart))
 	}
-
 }
