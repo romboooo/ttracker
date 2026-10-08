@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/romboooo/ttracker/hyprland"
+	"github.com/romboooo/ttracker/tracker"
 )
 
 func main() {
@@ -48,8 +49,12 @@ func main() {
 			continue
 		}
 
-		duration := now.Sub(intervalStart)
-		fmt.Printf("%s %v\n", "active window: "+lastActiveClass+": ", duration)
+		session := tracker.Session{
+			Class:     lastActiveClass,
+			StartTime: intervalStart,
+			EndTime:   now,
+		}
+		fmt.Printf("%s %v\n", "active window: "+session.Class+": ", session.EndTime.Sub(session.StartTime))
 		lastActiveClass = currAppClass
 		intervalStart = now
 	}
@@ -59,6 +64,11 @@ func main() {
 	}
 
 	if ctx.Err() != nil {
-		fmt.Printf("%s %v\n", "active window: "+lastActiveClass+": ", time.Since(intervalStart))
+		session := tracker.Session{
+			Class:     lastActiveClass,
+			StartTime: intervalStart,
+			EndTime:   time.Now(),
+		}
+		fmt.Printf("%s %v\n", "active window: "+session.Class+": ", session.EndTime.Sub(session.StartTime))
 	}
 }
