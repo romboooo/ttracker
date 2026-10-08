@@ -1,10 +1,12 @@
 package storage
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"time"
 
+	"github.com/romboooo/ttracker/tracker"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -16,7 +18,11 @@ type Session struct {
 	EndTime   time.Time
 }
 
-func Connect() (*gorm.DB, error) {
+type Storage struct {
+	db *gorm.DB
+}
+
+func Connect() (*Storage, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return nil, err
@@ -39,6 +45,25 @@ func Connect() (*gorm.DB, error) {
 		return nil, err
 	}
 
-	return db, nil
+	return &Storage{db: db}, nil
 }
 
+func (s *Storage) SaveSession(ctx context.Context, session tracker.Session) error {
+	if err := s.db.WithContext(ctx).Create(&Session{
+		Class:     session.Class,
+		StartTime: session.StartTime.UTC(),
+		EndTime:   session.EndTime.UTC(),
+	}).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Storage) Close() error {
+	sqlDB, err := s.db.DB()
+	if err != nil {
+		return err
+	}
+	return sqlDB.Close()
+}

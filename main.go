@@ -17,13 +17,11 @@ import (
 
 func main() {
 	fmt.Print("!")
-	db, err := storage.Connect()
+	storage, err := storage.Connect()
 	if err != nil {
 		log.Fatalf("%s %v", "db error: ", err)
 	}
-
-	fmt.Print(db)
-	os.Exit(0)
+	defer storage.Close()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
