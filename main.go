@@ -11,10 +11,19 @@ import (
 	"time"
 
 	"github.com/romboooo/ttracker/hyprland"
+	"github.com/romboooo/ttracker/storage"
 	"github.com/romboooo/ttracker/tracker"
 )
 
 func main() {
+	fmt.Print("!")
+	db, err := storage.Connect()
+	if err != nil {
+		log.Fatalf("%s %v", "db error: ", err)
+	}
+
+	fmt.Print(db)
+	os.Exit(0)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
@@ -54,7 +63,10 @@ func main() {
 			StartTime: intervalStart,
 			EndTime:   now,
 		}
-		fmt.Printf("%s %v\n", "active window: "+session.Class+": ", session.EndTime.Sub(session.StartTime))
+		if lastActiveClass != "" {
+			tracker.PrintSession(session)
+
+		}
 		lastActiveClass = currAppClass
 		intervalStart = now
 	}
@@ -63,12 +75,14 @@ func main() {
 		log.Fatalf("%v", err)
 	}
 
-	if ctx.Err() != nil {
-		session := tracker.Session{
-			Class:     lastActiveClass,
-			StartTime: intervalStart,
-			EndTime:   time.Now(),
-		}
-		fmt.Printf("%s %v\n", "active window: "+session.Class+": ", session.EndTime.Sub(session.StartTime))
+	session := tracker.Session{
+		Class:     lastActiveClass,
+		StartTime: intervalStart,
+		EndTime:   time.Now(),
+	}
+
+	if ctx.Err() != nil && session.Class != "" {
+
+		tracker.PrintSession(session)
 	}
 }
