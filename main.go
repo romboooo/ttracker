@@ -5,22 +5,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net"
-	"os"
-	"os/signal"
-	"strings"
-	"syscall"
-	"time"
-
-	"github.com/romboooo/ttracker/hyprland"
-)
-package main
-
-import (
-	"bufio"
-	"context"
-	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
