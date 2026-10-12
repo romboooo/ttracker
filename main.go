@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -16,12 +15,12 @@ import (
 )
 
 func main() {
-	fmt.Print("!")
-	storage, err := storage.Connect()
+
+	store, err := storage.Connect()
 	if err != nil {
 		log.Fatalf("%s %v", "db error: ", err)
 	}
-	defer storage.Close()
+	defer store.Close()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
@@ -63,7 +62,9 @@ func main() {
 		}
 		if lastActiveClass != "" {
 			tracker.PrintSession(session)
-
+			if err := store.SaveSession(ctx, session); err != nil {
+				log.Printf("save session: %v", err)
+			}
 		}
 		lastActiveClass = currAppClass
 		intervalStart = now
@@ -82,5 +83,10 @@ func main() {
 	if ctx.Err() != nil && session.Class != "" {
 
 		tracker.PrintSession(session)
+		saveCtx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		if err := store.SaveSession(saveCtx, session); err != nil {
+			log.Printf("save session: %v", err)
+		}
 	}
 }

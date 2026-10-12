@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -49,6 +50,11 @@ func Connect() (*Storage, error) {
 }
 
 func (s *Storage) SaveSession(ctx context.Context, session tracker.Session) error {
+
+	if session.StartTime.Equal(session.EndTime) || !session.EndTime.After(session.StartTime) {
+		return fmt.Errorf("end time should be after start time")
+	}
+
 	if err := s.db.WithContext(ctx).Create(&Session{
 		Class:     session.Class,
 		StartTime: session.StartTime.UTC(),
