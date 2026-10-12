@@ -23,6 +23,14 @@ type Storage struct {
 	db *gorm.DB
 }
 
+func (s *Storage) SessionsBetween(ctx context.Context, from, to time.Time) ([]tracker.Session, error) {
+	var sessions []tracker.Session
+	if err := s.db.WithContext(ctx).Where("start_time < ? AND end_time > ?", to, from).Find(&sessions).Error; err != nil {
+		return nil, err
+	}
+	return sessions, nil
+}
+
 func Connect() (*Storage, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
