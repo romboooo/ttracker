@@ -16,8 +16,19 @@ type SessionDuration struct {
 	Duration time.Duration
 }
 
-func Today(ctx context.Context, store SessionStore) {
-	//todo
+func Today(ctx context.Context, store SessionStore) ([]SessionDuration, error) {
+	now := time.Now()
+	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	endOfToday := startOfToday.AddDate(0, 0, 1)
+	sessions, err := store.SessionsBetween(ctx,
+		startOfToday,
+		endOfToday,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+	return SortByDuration(SummarizeByClass(sessions, startOfToday, endOfToday)), nil
 }
 
 func SortByDuration(summary map[string]time.Duration) []SessionDuration {
