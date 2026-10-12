@@ -16,19 +16,62 @@ type SessionDuration struct {
 	Duration time.Duration
 }
 
+func ThisWeek(ctx context.Context, store SessionStore) ([]SessionDuration, error) {
+	now := time.Now()
+	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	daysFromMonday := (int(now.Weekday()) + 6) % 7
+	startOfWeek := startOfToday.AddDate(0, 0, -daysFromMonday)
+
+	return ForRange(ctx,
+		store,
+		startOfWeek,
+		startOfWeek.AddDate(0, 0, 7),
+	)
+}
+
+func ThisMonth(ctx context.Context, store SessionStore) ([]SessionDuration, error) {
+	now := time.Now()
+	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+
+	return ForRange(ctx,
+		store,
+		startOfMonth,
+		startOfMonth.AddDate(0, 1, 0),
+	)
+}
+
+func ThisYear(ctx context.Context, store SessionStore) ([]SessionDuration, error) {
+	now := time.Now()
+	startOfYear := time.Date(now.Year(), time.January, 1, 0, 0, 0, 0, now.Location())
+
+	return ForRange(ctx,
+		store,
+		startOfYear,
+		startOfYear.AddDate(1, 0, 0),
+	)
+}
+
 func Today(ctx context.Context, store SessionStore) ([]SessionDuration, error) {
 	now := time.Now()
 	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-	endOfToday := startOfToday.AddDate(0, 0, 1)
-	sessions, err := store.SessionsBetween(ctx,
+
+	return ForRange(ctx,
+		store,
 		startOfToday,
-		endOfToday,
+		startOfToday.AddDate(0, 0, 1),
+	)
+}
+
+func ForRange(ctx context.Context, store SessionStore, from, to time.Time) ([]SessionDuration, error) {
+	sessions, err := store.SessionsBetween(ctx,
+		from,
+		to,
 	)
 
 	if err != nil {
 		return nil, err
 	}
-	return SortByDuration(SummarizeByClass(sessions, startOfToday, endOfToday)), nil
+	return SortByDuration(SummarizeByClass(sessions, from, to)), nil
 }
 
 func SortByDuration(summary map[string]time.Duration) []SessionDuration {
