@@ -9,6 +9,6 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(newRunCmd())
-
+	cmd.AddCommand(newStatsCmd())
 	return cmd
 }

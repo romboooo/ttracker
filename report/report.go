@@ -1,15 +1,23 @@
 package report
 
 import (
+	"context"
 	"sort"
 	"time"
 
 	"github.com/romboooo/ttracker/model"
 )
 
+type SessionStore interface {
+	SessionsBetween(ctx context.Context, from, to time.Time) ([]model.Session, error)
+}
 type SessionDuration struct {
 	Class    string
 	Duration time.Duration
+}
+
+func Today(ctx context.Context, store SessionStore) {
+	//todo
 }
 
 func SortByDuration(summary map[string]time.Duration) []SessionDuration {
