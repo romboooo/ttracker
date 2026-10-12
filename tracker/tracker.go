@@ -2,14 +2,11 @@ package tracker
 
 import (
 	"fmt"
-	"time"
+
+	"github.com/romboooo/ttracker/model"
 )
 
-type Session struct {
-	Class     string
-	StartTime time.Time
-	EndTime   time.Time
-}
+type Session = model.Session
 
 func PrintSession(session Session) {
 	fmt.Printf("%s %v\n", "active window: "+session.Class+": ", session.EndTime.Sub(session.StartTime))

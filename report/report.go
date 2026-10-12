@@ -4,7 +4,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/romboooo/ttracker/tracker"
+	"github.com/romboooo/ttracker/model"
 )
 
 type SessionDuration struct {
@@ -31,7 +31,7 @@ func SortByDuration(summary map[string]time.Duration) []SessionDuration {
 
 }
 
-func SummarizeByClass(sessions []tracker.Session, from, to time.Time) map[string]time.Duration {
+func SummarizeByClass(sessions []model.Session, from, to time.Time) map[string]time.Duration {
 	sessionToTime := make(map[string]time.Duration)
 
 	for _, session := range sessions {
@@ -46,7 +46,7 @@ func SummarizeByClass(sessions []tracker.Session, from, to time.Time) map[string
 	return sessionToTime
 }
 
-func DurationInRange(session tracker.Session, from, to time.Time) time.Duration {
+func DurationInRange(session model.Session, from, to time.Time) time.Duration {
 	startTime := session.StartTime
 	endTime := session.EndTime
 
